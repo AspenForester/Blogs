@@ -1,16 +1,16 @@
 # FSRM via DSC
 
-Sometimes a solution comes from scratch, inventing from the ground up.  Other times, it's just a matter of puting the pieces together.  So what do you get when you combine dscottraynsford's cFSRM DSC Resource, and Experiant.ca's anti ransomware list? One more brick in the wall against ransomware!
+Sometimes a solution comes from scratch, inventing from the ground up.  Other times, it's just a matter of putting the pieces together.  So what do you get when you combine dscottraynsford's cFSRM DSC Resource, and Experiant.ca's anti ransomware list? One more brick in the wall against ransomware!
 
-Certainly, a full defense includes end user education, proper application of user rights to file and folder resources, and a good anti-malware application.  But preventing, or at least hampering, a ransomware attack from doing what it is trying to do, is a significant defense.
+Certainly, a full defense includes end user education, proper application of user rights to file and folder resources, and a good anti-malware protection.  But disabling a ransomware attack vector is a significant defense.
 
- After one such attack, in which the attack itself was disrupted by forcibly powering down the infected PC, I was able to identify some of the temporary files, as well as the ransom notes themselves that this attack was using.  From this it occured to me that I could leverage File Server Resource Manager (FSRM) to block anything from writing (or reading) any files with those names and extensions. Ha! Passing 70-410 was worth something!
+ After an attack, in which the attack itself was disrupted by forcibly powering down the infected PC, I was able to identify some of the temporary files. Additionally I found the ransom notes themselves that this attack was using.  From this it occurred to me that I could leverage File Server Resource Manager (FSRM) to block anything from writing (or reading) any files with those names and extensions. Ha! Passing 70-410 was worth something!
 
 As is so often the case, I started out by installing the FSRM Feature on one of my Windows Servers, and configuring an FSRM File Screen using the in box GUI tool. At least with RSAT, I was able to do it without RDP-ing to the server.  Doing so gave me a feel for what I was setting up: A **File Group**, containing the list of files that I wanted to block; A **File Screen Template**; and an **Action** for the File Screen to take.
 
 In this case, I wanted to "actively" block the listed files from being written or read, and I wanted FSRM to write an event log entry, which I would have SCOM alert on.  That worked fine for a few file names on one server, but was never going to scale at all.
 
-One last piece of the puzzle before we get to the code: I wasn't naive enough to think that a few names and extensions was all it would take to proide any sort of protection.  I did a few Google searches and found that fsrm.experiant.ca was curating a list of filenames and extensions that had been involved in ransomware attacks.  To top it off, that list was available in json form.
+One last piece of the puzzle before we get to the code: I wasn't naive enough to think that a few names and extensions was all it would take to provide any sort of protection.  I did a few Google searches and found that fsrm.experiant.ca was curating a list of filenames and extensions that had been involved in ransomware attacks.  To top it off, that list was available in json form.
 
 To give credit where it's due, I also found that Experiant has posted a script-based solution to configure FSRM.
 
@@ -102,7 +102,7 @@ Node $AllNodes.NodeName
     }
 ```
 
-The last block, where we actually create the filescreen allows for multiple paths to be defined for a given node, but a single path, such as a drive letter is perfectly acceptable.  As written, this configuration will cause the FileScreen to block access to the filtered files, and create an event log entry.  In my case, we used SCOM to monitor for, and alert on that event log entry.  If you don't have SCOM, you could have FSRM send the email message itself, from the affected server.
+The last block, where we actually create the Filescreen allows for multiple paths to be defined for a given node, but a single path, such as a drive letter is perfectly acceptable.  As written, this configuration will cause the FileScreen to block access to the filtered files, and create an event log entry.  In my case, we used SCOM to monitor and alert on that event log entry.  If you don't have SCOM, you could have FSRM generate an email.
 
 Now we need a PowerShell data file (.psd1) to provide the node information.
 
